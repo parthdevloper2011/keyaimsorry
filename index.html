@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>For Keya</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+
+    body {
+      background: linear-gradient(180deg, #0a0f1a, #1b2735, #2c3e50);
+      color: white;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 { font-size: 3rem; margin-bottom: 20px; }
+
+    .message {
+      max-width: 650px;
+      font-size: 1.2rem;
+      line-height: 1.6;
+      min-height: 150px;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 25px;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover { background: white; color: black; }
+
+    .rain { position: absolute; width: 100%; height: 100%; pointer-events: none; }
+
+    .drop {
+      position: absolute;
+      bottom: 100%;
+      width: 2px;
+      height: 20px;
+      background: rgba(255,255,255,0.25);
+      animation: fall linear infinite;
+    }
+
+    @keyframes fall { to { transform: translateY(100vh); } }
+
+    /* Lightning */
+    .flash {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: white;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @keyframes flashAnim {
+      0% { opacity: 0; }
+      10% { opacity: 0.8; }
+      20% { opacity: 0; }
+      100% { opacity: 0; }
+    }
+
+    .page { display: none; }
+    .active { display: flex; }
+  </style>
+</head>
+<body>
+
+<div class="rain" id="rain"></div>
+<div class="flash" id="flash"></div>
+
+<!-- PAGE 1 -->
+<div class="container page active" id="page1">
+  <h1>I’m Sorry, Keya</h1>
+  <div class="message" id="msg1"></div>
+  <button onclick="nextPage()">Continue</button>
+</div>
+
+<!-- PAGE 2 -->
+<div class="container page" id="page2">
+  <h1>One Last Chance?</h1>
+  <div class="message" id="msg2"></div>
+
+  <button onclick="handleChoice('Yes')">Yes ❤️</button>
+  <button onclick="handleChoice('No')">No 💔</button>
+</div>
+
+<!-- PAGE 3 -->
+<div class="container page" id="page3">
+  <h1 id="resultTitle"></h1>
+  <div class="message" id="resultMsg"></div>
+</div>
+
+<script>
+  const text1 = `Hey Keya...\n\nI’ve been thinking a lot about everything, and I honestly feel really sorry. I didn’t understand you the way I should have, and I hate that I made you feel like you couldn’t share things freely with me.\n\nYou deserve someone who listens, understands, and makes you feel safe. I want to be that person for you.\n\nThank you for always caring about me. You really mean a lot to me ❤️`;
+
+  const text2 = `I know I made mistakes, but I truly want one last chance to make things right.\n\nI promise I’ll try harder, listen better, and understand you more.\n\nWould you give me one last chance?`;
+
+  function typeEffect(element, text, speed = 30) {
+    element.innerHTML = "";
+    let i = 0;
+    function type() {
+      if (i < text.length) {
+        element.innerHTML += text.charAt(i) === '\n' ? '<br>' : text.charAt(i);
+        i++;
+        setTimeout(type, speed);
+      }
+    }
+    type();
+  }
+
+  function nextPage() {
+    document.getElementById('page1').classList.remove('active');
+    document.getElementById('page2').classList.add('active');
+    typeEffect(document.getElementById('msg2'), text2);
+  }
+
+  // GOOGLE SHEETS (via Apps Script)
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby7AZDDhuYemCbnXPrnkG-e0b3aqp2aGvwbtERqnhykFL5KQjsPA6Q6IZahsYh6ohSx/exec";
+
+  function handleChoice(choice) {
+    // send to google sheet
+    fetch(SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ answer: choice, time: new Date().toISOString() })
+    });
+
+    // show result page
+    document.getElementById('page2').classList.remove('active');
+    document.getElementById('page3').classList.add('active');
+
+    if (choice === 'Yes') {
+      document.getElementById('resultTitle').innerText = "Thank You ❤️";
+      typeEffect(document.getElementById('resultMsg'), "I promise I won’t waste this chance... I’ll be better for you.");
+    } else {
+      document.getElementById('resultTitle').innerText = "I Understand 💔";
+      typeEffect(document.getElementById('resultMsg'), "I’m really sorry... I wish things were different.");
+    }
+  }
+
+  // start typing first message
+  typeEffect(document.getElementById('msg1'), text1);
+
+  // Rain
+  const rain = document.getElementById('rain');
+  for (let i = 0; i < 120; i++) {
+    let drop = document.createElement('div');
+    drop.classList.add('drop');
+    drop.style.left = Math.random() * 100 + 'vw';
+    drop.style.animationDuration = (0.5 + Math.random()) + 's';
+    drop.style.opacity = Math.random();
+    rain.appendChild(drop);
+  }
+
+  // Lightning effect loop
+  function lightning() {
+    const flash = document.getElementById('flash');
+    flash.style.animation = 'flashAnim 0.5s';
+    setTimeout(() => { flash.style.animation = ''; }, 500);
+    setTimeout(lightning, Math.random() * 5000 + 3000);
+  }
+  lightning();
+</script>
+
+</body>
+</html>
